@@ -188,30 +188,22 @@ export const ExpenseCategoryMonthlyBarChart: React.FC<ExpenseChartProps> = ({ ex
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" />
-          <XAxis 
-            dataKey="month" 
-            tick={{ fill: '#333333' }}
-            axisLine={{ stroke: '#e0e0e0' }}
-          />
-          <YAxis 
-            tickFormatter={(value) => `${currency}${value}`}
-            tick={{ fill: '#333333' }}
-            axisLine={{ stroke: '#e0e0e0' }}
-          />
+          <XAxis dataKey="month" />
           <Tooltip 
-            formatter={(value) => [
-              `${currency}${value}`
+            formatter={(value, name) => [
+              `${currency}${value}`,
+              name
             ]}
-            contentStyle={{ 
-              backgroundColor: 'white', 
+            contentStyle={{
+              backgroundColor: 'white',
               border: '1px solid #f0f0f0',
               borderRadius: '4px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
           />
           <Legend />
           {categories.map((category, index) => (
-            <Bar 
+            <Bar
               key={category}
               dataKey={category}
               name={category.charAt(0).toUpperCase() + category.slice(1)} // Capitalize
