@@ -66,8 +66,7 @@ export const ExpenseLineChart: React.FC<ExpenseChartProps> = ({ expenses, curren
           <XAxis 
             dataKey="date"
             tick={{ 
-              dy: 10, // Move labels down
-              padding: 5 
+              dy: 10
             }}
             tickMargin={10} // Add margin between the axis line and the tick labels
           />
