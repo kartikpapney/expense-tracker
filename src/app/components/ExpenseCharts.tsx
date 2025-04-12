@@ -32,10 +32,21 @@ const COLORS = [
 ];
 
 export const ExpenseLineChart: React.FC<ExpenseChartProps> = ({ expenses, currency }) => {
-  // Process data for line chart (date vs amount)
+  // Process data for line chart (date vs amount) - filter for current month only
   const lineChartData = useMemo(() => {
+    // Get current month and year
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // JavaScript months are 0-indexed
+    
+    // Filter expenses for current month only
+    const currentMonthExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate.getFullYear() === currentYear && expenseDate.getMonth() + 1 === currentMonth;
+    });
+    
     // Create a map to aggregate expenses by date
-    const expensesByDate = expenses.reduce((acc, expense) => {
+    const expensesByDate = currentMonthExpenses.reduce((acc, expense) => {
       const date = expense.date;
       if (!acc[date]) {
         acc[date] = 0;
@@ -46,44 +57,63 @@ export const ExpenseLineChart: React.FC<ExpenseChartProps> = ({ expenses, curren
 
     // Convert map to array and sort by date
     return Object.entries(expensesByDate)
-      .map(([date, amount]) => ({ date, amount }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .map(([date, amount]) => {
+        // Format the date to show only day (e.g., "12" instead of "2025-04-12")
+        const dayOnly = new Date(date).getDate().toString();
+        return { date: dayOnly, fullDate: date, amount };
+      })
+      .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
   }, [expenses]);
 
   if (lineChartData.length === 0) {
-    return <div className="p-4 text-center text-gray-500">No data available for chart</div>;
+    return <div className="p-4 text-center text-gray-500">No expenses for this month</div>;
   }
+
+  // Get month name for the title
+  const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
 
   return (
     <div className="mt-4">
-      <h3 className="text-lg font-medium text-gray-800 mb-3">Expense Trend</h3>
+      <h3 className="text-lg font-medium text-gray-800 mb-3">{currentMonthName} Expense Trend</h3>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart
           data={lineChartData}
-          margin={{ top: 5, bottom : 5 }} // Increased bottom margin
+          margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis 
             dataKey="date"
-            tick={{ 
-              dy: 10
-            }}
-            tickMargin={10} // Add margin between the axis line and the tick labels
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12 }}
           />
           <YAxis
-            tickFormatter={(value) => `${currency}${value}`}
+            hide={true} // Hide Y axis
           />
           <Tooltip
             formatter={(value) => [`${currency}${value}`, 'Amount']}
-            labelFormatter={(label) => `Date: ${label}`}
+            labelFormatter={(label, payload) => {
+              // Use the fullDate stored in the payload to show a better formatted date
+              if (payload && payload.length > 0 && payload[0].payload.fullDate) {
+                return `Date: ${new Date(payload[0].payload.fullDate).toLocaleDateString()}`;
+              }
+              return `Day: ${label}`;
+            }}
+            contentStyle={{ 
+              backgroundColor: 'white', 
+              border: '1px solid #f0f0f0',
+              borderRadius: '4px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+            }}
           />
-          <Legend />
           <Line
             type="monotone"
             dataKey="amount"
             name="Expense Amount"
             stroke="#333333"
-            activeDot={{ r: 8 }}
+            strokeWidth={2}
+            dot={{ r: 4, fill: "#333333", strokeWidth: 0 }}
+            activeDot={{ r: 6, fill: "#111111" }}
           />
         </LineChart>
       </ResponsiveContainer>

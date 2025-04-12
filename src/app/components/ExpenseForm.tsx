@@ -34,6 +34,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <input
               type="text"
               value={description}
+              maxLength={50}
               onChange={(e) => onChange('description', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
               required
@@ -46,6 +47,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               type="number"
               step="0.01"
               value={amount}
+              max={10000000}
               onChange={(e) => onChange('amount', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
               required

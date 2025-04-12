@@ -18,7 +18,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
 }) => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const expensesPerPage = 3;
+  const expensesPerPage = 10;
 
   // Sort expenses by date (newest first)
   const sortedExpenses = useMemo(() => {
