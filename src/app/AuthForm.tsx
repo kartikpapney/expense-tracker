@@ -11,7 +11,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onGoogleSignIn, isLoading }) => {
     return (
         <div className="max-w-md mx-auto mt-16 p-8 bg-white rounded shadow">
             <h2 className="text-2xl font-bold text-center text-black mb-4">Expense Tracker</h2>
-            <p className="text-gray-600 text-center mb-8 text-sm">Track and manage your expenses in Indian Rupees ({DEFAULT_CURRENCY})</p>
+            <img src="/logo.png" />
+
+            <p className="text-gray-600 text-center mb-8 text-sm">Track and manage your expenses</p>
 
             <button
                 onClick={onGoogleSignIn}

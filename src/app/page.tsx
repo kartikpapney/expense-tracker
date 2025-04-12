@@ -197,7 +197,7 @@ function App() {
         <div className="min-h-screen bg-gray-100 py-8 px-4">
             {user ? (
                 <div className="max-w-screen-xl mx-auto">
-                    <Header userEmail={user.email} onSignOut={handleSignOut} />
+                    <Header userName={user.displayName} onSignOut={handleSignOut}  />
 
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
                         {/* Stats Panel */}

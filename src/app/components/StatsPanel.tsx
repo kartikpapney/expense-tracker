@@ -45,16 +45,15 @@ const StatsPanel: React.FC<StatsPanelProps> = ({
 
   return (
     <div className="bg-white p-6 rounded shadow">
-      <div className="mb-6 p-4 bg-gray-50 rounded">
+      {/* <div className="mb-6 p-4 bg-gray-50 rounded">
         <h3 className="text-lg font-medium text-gray-800 mb-2">Total Expenses</h3>
         <div className="text-3xl font-bold text-black">{currency}{totalExpenses.toFixed(2)}</div>
-      </div>
+      </div> */}
       
       {/* Current Month Expenses */}
       <div className="mb-6 p-4 bg-gray-50 rounded">
         <div className="flex justify-between items-center mb-1">
           <h3 className="text-lg font-medium text-gray-800">{currentMonthName} Expenses</h3>
-          <span className="text-sm text-gray-500">{monthlyPercent}% of total</span>
         </div>
         <div className="text-2xl font-bold text-black">{currency}{currentMonthExpenses.toFixed(2)}</div>
       </div>

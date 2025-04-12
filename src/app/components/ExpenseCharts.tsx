@@ -60,14 +60,21 @@ export const ExpenseLineChart: React.FC<ExpenseChartProps> = ({ expenses, curren
       <ResponsiveContainer width="100%" height={250}>
         <LineChart
           data={lineChartData}
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          margin={{ top: 5, bottom : 5 }} // Increased bottom margin
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis 
+          <XAxis 
+            dataKey="date"
+            tick={{ 
+              dy: 10, // Move labels down
+              padding: 5 
+            }}
+            tickMargin={10} // Add margin between the axis line and the tick labels
+          />
+          <YAxis
             tickFormatter={(value) => `${currency}${value}`}
           />
-          <Tooltip 
+          <Tooltip
             formatter={(value) => [`${currency}${value}`, 'Amount']}
             labelFormatter={(label) => `Date: ${label}`}
           />
