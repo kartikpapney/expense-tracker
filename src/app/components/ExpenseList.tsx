@@ -88,53 +88,56 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
     if (totalPages <= 1) return null;
     
     return (
-      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+      <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4 mt-6">
         <div className="flex flex-1 justify-between sm:hidden">
           <button
             onClick={prevPage}
             disabled={currentPage === 1}
-            className={`relative inline-flex items-center rounded px-4 py-2 text-sm font-medium ${
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
               currentPage === 1 
-                ? 'text-gray-300 cursor-not-allowed' 
-                : 'text-gray-700 hover:bg-gray-50'
+                ? 'text-gray-400 cursor-not-allowed bg-gray-200' 
+                : 'text-gray-700 bg-white hover:bg-gray-100'
             }`}
           >
             Previous
           </button>
+          <span className="px-3 py-2 text-sm text-gray-600 font-medium">
+            {currentPage} of {totalPages}
+          </span>
           <button
             onClick={nextPage}
             disabled={currentPage === totalPages}
-            className={`relative ml-3 inline-flex items-center rounded px-4 py-2 text-sm font-medium ${
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
               currentPage === totalPages 
-                ? 'text-gray-300 cursor-not-allowed' 
-                : 'text-gray-700 hover:bg-gray-50'
+                ? 'text-gray-400 cursor-not-allowed bg-gray-200' 
+                : 'text-gray-700 bg-white hover:bg-gray-100'
             }`}
           >
             Next
           </button>
         </div>
+        
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">{indexOfFirstExpense + 1}</span> to{' '}
-              <span className="font-medium">
+            <p className="text-sm text-gray-600">
+              Showing <span className="font-semibold">{indexOfFirstExpense + 1}</span> to{' '}
+              <span className="font-semibold">
                 {Math.min(indexOfLastExpense, expenses.length)}
               </span>{' '}
-              of <span className="font-medium">{expenses.length}</span> expenses
+              of <span className="font-semibold">{expenses.length}</span> expenses
             </p>
           </div>
           <div>
-            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <nav className="flex items-center space-x-1" aria-label="Pagination">
               <button
                 onClick={prevPage}
                 disabled={currentPage === 1}
-                className={`relative inline-flex items-center rounded-l-md px-2 py-2 ${
+                className={`p-2 rounded-lg transition-colors ${
                   currentPage === 1 
-                    ? 'text-gray-300 cursor-not-allowed' 
-                    : 'text-gray-500 hover:bg-gray-50'
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                <span className="sr-only">Previous</span>
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
                 </svg>
@@ -152,10 +155,10 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
                     <button
                       key={page}
                       onClick={() => paginate(page)}
-                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                      className={`px-3 py-2 text-sm font-semibold rounded-lg transition-colors ${
                         page === currentPage 
-                          ? 'bg-black text-white focus:z-20' 
-                          : 'text-gray-900 hover:bg-gray-50 focus:z-20'
+                          ? 'bg-blue-500 text-white' 
+                          : 'text-gray-700 hover:bg-gray-200'
                       }`}
                     >
                       {page}
@@ -171,7 +174,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
                   return (
                     <span
                       key={page}
-                      className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700"
+                      className="px-3 py-2 text-sm font-semibold text-gray-500"
                     >
                       ...
                     </span>
@@ -184,13 +187,12 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
               <button
                 onClick={nextPage}
                 disabled={currentPage === totalPages}
-                className={`relative inline-flex items-center rounded-r-md px-2 py-2 ${
+                className={`p-2 rounded-lg transition-colors ${
                   currentPage === totalPages 
-                    ? 'text-gray-300 cursor-not-allowed' 
-                    : 'text-gray-500 hover:bg-gray-50'
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                <span className="sr-only">Next</span>
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
                 </svg>
@@ -203,64 +205,125 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium text-black">Your Expenses</h2>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-3 sm:space-y-0">
         <div className="flex items-center space-x-3">
-          <div className="text-sm text-gray-500">
-            Showing {expenses.length} {expenses.length === 1 ? 'expense' : 'expenses'}
+          <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
           </div>
-          {expenses.length > 0 && (
-            <button
-              onClick={downloadCSV}
-              className="px-3 py-1 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-black text-xs transition-colors flex items-center"
-            >
-              <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 16L12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 13L12 16L15 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M7 20H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Download CSV
-            </button>
-          )}
+          <div>
+            <h2 className="text-lg sm:text-xl font-medium text-gray-900">Your Expenses</h2>
+            <p className="text-sm text-gray-500">
+              {expenses.length} {expenses.length === 1 ? 'expense' : 'expenses'} tracked
+            </p>
+          </div>
         </div>
+        
+        {expenses.length > 0 && (
+          <button
+            onClick={downloadCSV}
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 self-start sm:self-auto"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 16L12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 13L12 16L15 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M7 20H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>Export CSV</span>
+          </button>
+        )}
       </div>
       
       {expenses.length === 0 ? (
-        <div className="bg-gray-50 p-6 text-center rounded">
-          <p className="text-gray-500">No expenses yet. Add your first expense above!</p>
+        <div className="text-center py-12">
+          <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No expenses yet</h3>
+          <p className="text-gray-500 mb-4">Start tracking your spending by adding your first expense above</p>
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto bg-white rounded border border-gray-200">
+          {/* Mobile Card View */}
+          <div className="block sm:hidden space-y-3">
+            {currentExpenses.map(expense => (
+              <div key={expense.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1">
+                    <div className="flex items-center text-xs text-gray-500 mb-1">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2h-2a2 2 0 002 2z" />
+                      </svg>
+                      {expense.date}
+                    </div>
+                    <h3 className="font-medium text-gray-900 text-base">{expense.description}</h3>
+                    <p className="text-sm text-gray-600 capitalize">
+                      <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs font-medium mt-1">
+                        {expense.category}
+                      </span>
+                    </p>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">{currency}{expense.amount.toFixed(2)}</p>
+                </div>
+                <div className="flex justify-end pt-3 border-t border-gray-200">
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => onEdit(expense)}
+                      className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-xs font-medium transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => onDelete(expense.id)}
+                      className="px-3 py-1.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 text-xs font-medium transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto bg-gray-50 rounded-lg border border-gray-200">
             <table className="w-full">
               <thead>
-                <tr className="text-left text-sm bg-gray-50 text-gray-600 border-b border-gray-200">
-                  {/* <th className="px-4 py-3 font-medium">Date</th> */}
-                  <th className="px-4 py-3 font-medium">Description</th>
-                  <th className="px-4 py-3 font-medium">Category</th>
-                  <th className="px-4 py-3 font-medium">Amount</th>
-                  <th className="px-4 py-3 font-medium">Actions</th>
+                <tr className="text-left text-sm bg-gray-100 text-gray-600 border-b border-gray-200">
+                  <th className="px-6 py-4 font-medium">Date</th>
+                  <th className="px-6 py-4 font-medium">Description & Category</th>
+                  <th className="px-6 py-4 font-medium">Amount</th>
+                  <th className="px-6 py-4 font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white">
                 {currentExpenses.map(expense => (
-                  <tr key={expense.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    {/* <td className="px-4 py-3 text-sm text-gray-800">{expense.date}</td> */}
-                    <td className="px-4 py-3 text-sm text-gray-800">{expense.description}</td>
-                    <td className="px-4 py-3 text-sm text-gray-800 capitalize">{expense.category}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-800">{currency}{expense.amount.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-sm">
+                  <tr key={expense.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm text-gray-600">{expense.date}</td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{expense.description}</p>
+                        <span className="inline-block px-2 py-1 bg-gray-100 rounded text-xs font-medium text-gray-600 capitalize mt-1">
+                          {expense.category}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-bold text-gray-900">{currency}{expense.amount.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm">
                       <div className="flex space-x-2">
                         <button 
                           onClick={() => onEdit(expense)}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-black text-xs transition-colors"
+                          className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-xs font-medium transition-colors"
                         >
                           Edit
                         </button>
                         <button 
                           onClick={() => onDelete(expense.id)}
-                          className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-black text-xs transition-colors"
+                          className="px-3 py-1.5 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 text-xs font-medium transition-colors"
                         >
                           Delete
                         </button>

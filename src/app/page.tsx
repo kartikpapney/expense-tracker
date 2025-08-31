@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { User } from "firebase/auth";
 import { Expense, CategoryTotals, ExpenseFormData } from "./types";
-import { DEFAULT_CURRENCY, EXPENSE_CATEGORIES } from "@/app/constants";
+import { DEFAULT_CURRENCY, EXPENSE_CATEGORIES } from "./constants";
 import {
     signInWithGoogle,
     signOutUser,
@@ -13,15 +13,56 @@ import {
     updateExpense,
     deleteExpense,
     listenToExpenses,
-} from "@/app/firebaseService";
+} from "./firebaseService";
 
 // Components
 import AuthForm from "./AuthForm";
 import Header from "./components/Header";
-import StatsPanel from "@/app/components/StatsPanel";
-import ExpenseForm from "@/app/components/ExpenseForm";
-import ExpenseList from "@/app/components/ExpenseList";
-import ExpenseCharts from "@/app/components/ExpenseCharts";
+import ExpenseForm from "./components/ExpenseForm";
+import ExpenseList from "./components/ExpenseList";
+import ExpenseCharts from "./components/ExpenseCharts";
+
+// Simple StatsPanel component defined inline
+const StatsPanel: React.FC<{
+  expenses: Expense[];
+  totalExpenses: number;
+  categoryTotals: CategoryTotals;
+  currency: string;
+}> = ({ expenses, currency }) => {
+  const currentMonthExpenses = React.useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const yearMonthStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+    
+    return expenses.reduce((sum, expense) => {
+      if (expense.date.startsWith(yearMonthStr)) {
+        return sum + expense.amount;
+      }
+      return sum;
+    }, 0);
+  }, [expenses]);
+  
+  const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-gray-600 text-sm font-medium">{currentMonthName} Expenses</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{currency}{currentMonthExpenses.toFixed(2)}</p>
+          </div>
+          <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2h-2a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function App() {
     // Auth state
@@ -194,33 +235,42 @@ function App() {
 
     // Render app content based on auth state
     return (
-        <div className="min-h-screen bg-gray-100 py-8 px-4">
+        <div className="min-h-screen bg-gray-50">
             {user ? (
-                <div className="max-w-screen-xl mx-auto">
-                    <Header userName={user.displayName} onSignOut={handleSignOut}  />
+                <div className="mobile-container max-w-7xl mx-auto">
+                    <Header userName={user.displayName} onSignOut={handleSignOut} />
 
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-                        {/* Stats Panel */}
-                        <StatsPanel expenses={expenses} totalExpenses={totalExpenses} categoryTotals={categoryTotals} currency={currency} />
+                    {/* Mobile-first layout */}
+                    <div className="space-y-6">
+                        {/* Stats Panel - Full width on mobile */}
+                        <StatsPanel 
+                            expenses={expenses} 
+                            totalExpenses={totalExpenses} 
+                            categoryTotals={categoryTotals} 
+                            currency={currency} 
+                        />
 
                         {/* Expense Form */}
-                        <div className="lg:col-span-3">
-                            <ExpenseForm
-                                formData={formData}
-                                isEditing={!!editingId}
-                                onSubmit={handleSubmitExpense}
-                                onChange={handleFormChange}
-                                onCancel={resetForm}
-                            />
-                        </div>
-                    </div>
+                        <ExpenseForm
+                            formData={formData}
+                            isEditing={!!editingId}
+                            onSubmit={handleSubmitExpense}
+                            onChange={handleFormChange}
+                            onCancel={resetForm}
+                        />
 
-                    {/* Expense Charts */}
-                    {expenses.length > 0 && <ExpenseCharts expenses={expenses} currency={currency} />}
+                        {/* Expense Charts */}
+                        {expenses.length > 0 && (
+                            <ExpenseCharts expenses={expenses} currency={currency} />
+                        )}
 
-                    {/* Expenses List */}
-                    <div className="mt-6">
-                        <ExpenseList expenses={expenses} currency={currency} onEdit={handleEditExpense} onDelete={handleDeleteExpense} />
+                        {/* Expenses List */}
+                        <ExpenseList 
+                            expenses={expenses} 
+                            currency={currency} 
+                            onEdit={handleEditExpense} 
+                            onDelete={handleDeleteExpense} 
+                        />
                     </div>
                 </div>
             ) : (
