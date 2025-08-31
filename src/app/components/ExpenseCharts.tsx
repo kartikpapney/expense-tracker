@@ -129,45 +129,57 @@ export const ExpenseLineChart: React.FC<ExpenseChartProps> = ({ expenses, curren
 };
 
 export const ExpenseCategoryMonthlyBarChart: React.FC<ExpenseChartProps> = ({ expenses, currency }) => {
-  // Process data for monthly chart
-  const monthlyChartData = useMemo(() => {
-    const categories = Array.from(new Set(expenses.map(e => e.category)));
-    const expensesByMonth: Record<string, Record<string, number>> = {};
+  // Process data for heatmap
+  const heatmapData = useMemo(() => {
+    const expensesByMonth: Record<string, number> = {};
     
     expenses.forEach(expense => {
       const dateParts = expense.date.split('-');
       if (dateParts.length >= 2) {
         const yearMonth = `${dateParts[0]}-${dateParts[1]}`;
-        
-        if (!expensesByMonth[yearMonth]) {
-          expensesByMonth[yearMonth] = {};
-          categories.forEach(cat => {
-            expensesByMonth[yearMonth][cat] = 0;
-          });
-        }
-        
-        expensesByMonth[yearMonth][expense.category] += expense.amount;
+        expensesByMonth[yearMonth] = (expensesByMonth[yearMonth] || 0) + expense.amount;
       }
     });
     
-    const result = Object.entries(expensesByMonth).map(([yearMonth, categoryAmounts]) => {
-      const total = Object.values(categoryAmounts).reduce((sum, amount) => sum + amount, 0);
-      return {
-        month: new Date(`${yearMonth}-01`).toLocaleString('default', { month: 'short', year: 'numeric' }),
-        yearMonth,
-        total,
-        categories: categoryAmounts
-      };
-    });
+    // Get last 12 months or all available data (whichever is less)
+    const monthEntries = Object.entries(expensesByMonth)
+      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime());
     
-    return result.sort((a, b) => new Date(a.yearMonth).getTime() - new Date(b.yearMonth).getTime());
+    const last12Months = monthEntries.slice(-12);
+    
+    // If we have less than 12 months, fill from current month backwards
+    const result: Array<{ yearMonth: string; amount: number; monthName: string; year: string }> = [];
+    
+    if (last12Months.length > 0) {
+      // Use actual data
+      last12Months.forEach(([yearMonth, amount]) => {
+        const date = new Date(`${yearMonth}-01`);
+        result.push({
+          yearMonth,
+          amount,
+          monthName: date.toLocaleString('default', { month: 'short' }),
+          year: date.getFullYear().toString()
+        });
+      });
+    } else {
+      // No data, show empty heatmap for current year
+      const now = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const yearMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        result.push({
+          yearMonth,
+          amount: 0,
+          monthName: date.toLocaleString('default', { month: 'short' }),
+          year: date.getFullYear().toString()
+        });
+      }
+    }
+    
+    return result;
   }, [expenses]);
 
-  const categories = useMemo(() => {
-    return Array.from(new Set(expenses.map(e => e.category)));
-  }, [expenses]);
-
-  if (monthlyChartData.length === 0) {
+  if (heatmapData.length === 0) {
     return (
       <div className="text-center py-8">
         <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -180,17 +192,69 @@ export const ExpenseCategoryMonthlyBarChart: React.FC<ExpenseChartProps> = ({ ex
     );
   }
 
-  const maxTotal = Math.max(...monthlyChartData.map(d => d.total));
-  const categoryColors = [
-    '#ef4444', // Red for Comforts
-    '#eab308', // Yellow for Necessities  
-    '#22c55e', // Green for Basics
-    '#3b82f6', // Blue
-    '#8b5cf6', // Purple
-    '#f97316', // Orange
-    '#06b6d4', // Cyan
-    '#84cc16'  // Lime
-  ];
+  const maxAmount = Math.max(...heatmapData.map(d => d.amount));
+  const minAmount = Math.min(...heatmapData.filter(d => d.amount > 0).map(d => d.amount));
+
+  // Function to get color intensity based on amount with new ranges
+  const getColorIntensity = (amount: number) => {
+    if (amount === 0) return 'bg-gray-100';
+    
+    // Green: 0-30k
+    if (amount < 30000) {
+      if (amount >= 25000) return 'bg-green-600';      // 25k-30k: darker green
+      if (amount >= 20000) return 'bg-green-500';      // 20k-25k
+      if (amount >= 15000) return 'bg-green-400';      // 15k-20k
+      if (amount >= 10000) return 'bg-green-300';      // 10k-15k
+      if (amount >= 5000) return 'bg-green-200';       // 5k-10k
+      return 'bg-green-100';                           // 0-5k: lightest green
+    }
+    
+    // Yellow: 30k-35k
+    if (amount < 35000) {
+      if (amount >= 34000) return 'bg-yellow-600';     // 34k-35k: darker yellow
+      if (amount >= 33000) return 'bg-yellow-500';     // 33k-34k
+      if (amount >= 32000) return 'bg-yellow-400';     // 32k-33k
+      if (amount >= 31000) return 'bg-yellow-300';     // 31k-32k
+      return 'bg-yellow-200';                          // 30k-31k: lighter yellow
+    }
+    
+    // Red: 35k+ with increasing density
+    if (amount >= 50000) return 'bg-red-900';         // 50k+: darkest red
+    if (amount >= 45000) return 'bg-red-800';         // 45k-50k
+    if (amount >= 42000) return 'bg-red-700';         // 42k-45k
+    if (amount >= 39000) return 'bg-red-600';         // 39k-42k
+    if (amount >= 37000) return 'bg-red-500';         // 37k-39k
+    if (amount >= 36000) return 'bg-red-400';         // 36k-37k
+    return 'bg-red-300';                              // 35k-36k: lightest red
+  };
+
+  // Calculate average monthly expense (excluding current and future months)
+  const now = new Date();
+  const currentYearMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+  
+  // Only include months that are in the past AND have some expense data
+  const completedMonths = heatmapData.filter(month => {
+    const monthDate = new Date(`${month.yearMonth}-01`);
+    const currentDate = new Date(now.getFullYear(), now.getMonth(), 1); // First day of current month
+    
+    // Month must be before current month and have expenses
+    return monthDate < currentDate && month.amount > 0;
+  });
+  
+  const totalAmount = completedMonths.reduce((sum, month) => sum + month.amount, 0);
+  
+  const averageMonthlyExpense = completedMonths.length > 0 
+    ? totalAmount / completedMonths.length 
+    : 0;
+
+  // Group by year for better organization
+  const yearGroups = heatmapData.reduce((groups, month) => {
+    if (!groups[month.year]) {
+      groups[month.year] = [];
+    }
+    groups[month.year].push(month);
+    return groups;
+  }, {} as Record<string, typeof heatmapData>);
 
   return (
     <div>
@@ -198,77 +262,72 @@ export const ExpenseCategoryMonthlyBarChart: React.FC<ExpenseChartProps> = ({ ex
         <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
-        Monthly by Category
+        Monthly Expenses Heatmap ({currency}{averageMonthlyExpense.toFixed(0)})
       </h3>
       
-      {/* Custom HTML/CSS Chart */}
       <div className="bg-white p-4 rounded-lg">
-        <div className="flex items-end justify-between space-x-3 mb-4" style={{ height: '280px' }}>
-          {monthlyChartData.map((monthData, monthIndex) => {
-            const heightPercentage = (monthData.total / maxTotal) * 80; // Use 80% of container height
-            const minHeight = 40; // Minimum height in pixels
-            const barHeight = Math.max(heightPercentage, minHeight);
-            
-            return (
-              <div key={monthData.month} className="flex-1 flex flex-col items-center justify-end h-full">
-                {/* Total amount label */}
-                <div className="text-xs font-semibold text-gray-700 mb-2 text-center">
-                  {currency}{monthData.total.toLocaleString()}
-                </div>
-                
-                {/* Stacked bar container */}
-                <div className="flex flex-col justify-end w-full max-w-12" style={{ height: '200px' }}>
-                  <div 
-                    className="w-full rounded-t-md relative flex flex-col-reverse border border-gray-200"
-                    style={{ 
-                      height: `${barHeight}px`,
-                      minHeight: `${minHeight}px`
-                    }}
-                  >
-                    {categories.map((category, categoryIndex) => {
-                      const amount = monthData.categories[category] || 0;
-                      if (amount === 0) return null;
-                      
-                      const segmentPercentage = (amount / monthData.total) * 100;
-                      const color = categoryColors[categoryIndex % categoryColors.length];
-                      
-                      return (
-                        <div
-                          key={category}
-                          className="w-full"
-                          style={{
-                            height: `${segmentPercentage}%`,
-                            backgroundColor: color,
-                            borderTopLeftRadius: categoryIndex === categories.length - 1 ? '6px' : '0',
-                            borderTopRightRadius: categoryIndex === categories.length - 1 ? '6px' : '0'
-                          }}
-                          title={`${category}: ${currency}${amount.toLocaleString()}`}
-                        />
-                      );
-                    })}
+        {Object.entries(yearGroups).map(([year, months]) => (
+          <div key={year} className="mb-6 last:mb-0">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">{year}</h4>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {months.map((monthData) => (
+                <div
+                  key={monthData.yearMonth}
+                  className={`
+                    aspect-square rounded-lg p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md
+                    ${getColorIntensity(monthData.amount)}
+                    border border-gray-200
+                  `}
+                  title={`${monthData.monthName} ${monthData.year}: ${currency}${monthData.amount.toLocaleString()}`}
+                >
+                  <div className="h-full flex flex-col justify-between text-center">
+                    <div className="text-xs font-medium text-gray-700">
+                      {monthData.monthName}
+                    </div>
+                    <div className="text-xs font-bold text-gray-900">
+                      {monthData.amount > 0 ? `${currency}${monthData.amount.toLocaleString()}` : '-'}
+                    </div>
                   </div>
                 </div>
-                
-                {/* Month label */}
-                <div className="text-xs text-gray-600 mt-2 text-center">
-                  {monthData.month}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              ))}
+            </div>
+          </div>
+        ))}
         
         {/* Legend */}
-        <div className="flex flex-wrap justify-center gap-4 text-sm">
-          {categories.map((category, index) => (
-            <div key={category} className="flex items-center">
-              <div 
-                className="w-3 h-3 rounded mr-2"
-                style={{ backgroundColor: categoryColors[index % categoryColors.length] }}
-              />
-              <span className="text-gray-700 capitalize">{category}</span>
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="text-xs text-gray-600 mb-3">Expense ranges</div>
+          
+          {/* Updated color scale */}
+          <div className="flex items-center gap-1 mb-4">
+            <span className="text-xs text-gray-500">₹0</span>
+            <div className="w-3 h-3 bg-gray-100 rounded border"></div>
+            <div className="w-3 h-3 bg-green-100 rounded"></div>
+            <div className="w-3 h-3 bg-green-300 rounded"></div>
+            <div className="w-3 h-3 bg-green-600 rounded"></div>
+            <div className="w-3 h-3 bg-yellow-200 rounded"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+            <div className="w-3 h-3 bg-red-300 rounded"></div>
+            <div className="w-3 h-3 bg-red-600 rounded"></div>
+            <div className="w-3 h-3 bg-red-900 rounded"></div>
+            <span className="text-xs text-gray-500 ml-1">₹50k+</span>
+          </div>
+          
+          {/* Range indicators */}
+          <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-green-400 rounded"></div>
+              <span>₹0-30k</span>
             </div>
-          ))}
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-yellow-400 rounded"></div>
+              <span>₹30-35k</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-red-500 rounded"></div>
+              <span>₹35k+</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
